@@ -730,9 +730,9 @@
         // Load all data from Google Sheets
         async function loadDataFromSheets() {
             try {
-                showLoadingState();
+                console.log('Bắt đầu tải dữ liệu từ Google Sheets...');
                 
-                // Load student list
+                // Load student list first
                 await loadStudentsFromSheets();
                 
                 // Load attendance data
@@ -750,22 +750,31 @@
                 loadAttendanceGrid();
                 
                 isDataLoaded = true;
-                hideLoadingState();
                 
                 console.log('Đã tải dữ liệu từ Google Sheets thành công');
+                alert('Đã tải dữ liệu thành công từ Google Sheets!');
             } catch (error) {
                 console.error('Lỗi tải dữ liệu:', error);
-                hideLoadingState();
-                showErrorState('Không thể tải dữ liệu từ Google Sheets. Vui lòng kiểm tra kết nối.');
+                alert('Lỗi tải dữ liệu từ Google Sheets: ' + error.message);
+                
+                // Load sample data as fallback
+                loadSampleData();
             }
         }
 
         // Load students from Google Sheets
         async function loadStudentsFromSheets() {
             try {
+                console.log('Đang tải danh sách học sinh từ Google Sheets...');
+                
                 const response = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=DanhSach`, {
-                    method: 'GET'
+                    method: 'GET',
+                    mode: 'cors'
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
                 
                 const text = await response.text();
                 const jsonText = text.substring(47).slice(0, -2); // Remove Google's wrapper
@@ -773,7 +782,7 @@
                 
                 students = [];
                 
-                if (data.table && data.table.rows) {
+                if (data.table && data.table.rows && data.table.rows.length > 1) {
                     data.table.rows.forEach((row, index) => {
                         if (index === 0) return; // Skip header row
                         
@@ -793,15 +802,14 @@
                             });
                         }
                     });
+                    
+                    console.log(`Đã tải ${students.length} học sinh từ Google Sheets`);
+                } else {
+                    throw new Error('Không tìm thấy dữ liệu học sinh trong sheet DanhSach');
                 }
-                
-                console.log(`Đã tải ${students.length} học sinh từ Google Sheets`);
             } catch (error) {
                 console.error('Lỗi tải danh sách học sinh:', error);
-                // Fallback to sample data if loading fails
-                students = [
-                    { id: 1, name: "Đang tải dữ liệu...", status: "present", discipline: 0, absences: 0 }
-                ];
+                throw new Error(`Không thể tải danh sách học sinh: ${error.message}`);
             }
         }
 
@@ -982,47 +990,52 @@
             }
         }
 
-        // Show loading state
-        function showLoadingState() {
-            const mainContent = document.querySelector('.container.mx-auto.px-4.py-6');
-            if (mainContent) {
-                mainContent.innerHTML = `
-                    <div class="flex items-center justify-center min-h-[400px]">
-                        <div class="text-center">
-                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                            <p class="text-gray-600">Đang tải dữ liệu từ Google Sheets...</p>
-                            <p class="text-sm text-gray-500 mt-2">Vui lòng đợi trong giây lát</p>
-                        </div>
-                    </div>
-                `;
-            }
-        }
 
-        // Hide loading state and restore content
-        function hideLoadingState() {
-            // Reload the page content - in a real app, you'd restore the original HTML
-            location.reload();
-        }
 
-        // Show error state
-        function showErrorState(message) {
-            const mainContent = document.querySelector('.container.mx-auto.px-4.py-6');
-            if (mainContent) {
-                mainContent.innerHTML = `
-                    <div class="flex items-center justify-center min-h-[400px]">
-                        <div class="text-center">
-                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
-                            </div>
-                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Lỗi tải dữ liệu</h3>
-                            <p class="text-gray-600 mb-4">${message}</p>
-                            <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
-                                <i class="fas fa-refresh mr-2"></i>Thử lại
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
+        // Load sample data as fallback
+        function loadSampleData() {
+            console.log('Tải dữ liệu mẫu...');
+            
+            students = [
+                { id: 1, stt: 1, name: "Nguyễn Văn An", gender: "Nam", birthDate: "2007-01-15", address: "Hà Nội", parentPhone: "0987654321", status: "present", discipline: 8.5, absences: 0 },
+                { id: 2, stt: 2, name: "Trần Thị Bình", gender: "Nữ", birthDate: "2007-03-22", address: "Hà Nội", parentPhone: "0987654322", status: "present", discipline: 9.0, absences: 1 },
+                { id: 3, stt: 3, name: "Lê Văn Cường", gender: "Nam", birthDate: "2007-05-10", address: "Hà Nội", parentPhone: "0987654323", status: "absent", discipline: 7.5, absences: 3 },
+                { id: 4, stt: 4, name: "Phạm Thị Dung", gender: "Nữ", birthDate: "2007-02-18", address: "Hà Nội", parentPhone: "0987654324", status: "present", discipline: 8.8, absences: 0 },
+                { id: 5, stt: 5, name: "Hoàng Văn Em", gender: "Nam", birthDate: "2007-04-25", address: "Hà Nội", parentPhone: "0987654325", status: "late", discipline: 8.0, absences: 2 },
+                { id: 6, stt: 6, name: "Vũ Thị Phương", gender: "Nữ", birthDate: "2007-06-12", address: "Hà Nội", parentPhone: "0987654326", status: "present", discipline: 9.2, absences: 0 },
+                { id: 7, stt: 7, name: "Đỗ Văn Giang", gender: "Nam", birthDate: "2007-01-30", address: "Hà Nội", parentPhone: "0987654327", status: "present", discipline: 7.8, absences: 1 },
+                { id: 8, stt: 8, name: "Bùi Thị Hoa", gender: "Nữ", birthDate: "2007-03-08", address: "Hà Nội", parentPhone: "0987654328", status: "absent", discipline: 8.3, absences: 4 }
+            ];
+            
+            classInfo = {
+                className: '10A1',
+                teacher: 'Cô Nguyễn Thị Lan',
+                totalStudents: students.length,
+                schoolYear: '2023-2024'
+            };
+            
+            attendanceData = {};
+            disciplineData = {};
+            
+            // Initialize attendance and discipline data
+            students.forEach(student => {
+                attendanceData[student.name] = {
+                    [new Date().toDateString()]: student.status
+                };
+                disciplineData[student.name] = {
+                    score: student.discipline,
+                    notes: 'Dữ liệu mẫu'
+                };
+            });
+            
+            // Update UI
+            updateDashboardStats();
+            loadStudentList();
+            loadAttendanceGrid();
+            updateClassHeader();
+            
+            isDataLoaded = true;
+            console.log('Đã tải dữ liệu mẫu thành công');
         }
 
         // Initialize Google API
@@ -1432,10 +1445,6 @@
 
         // Refresh data from Google Sheets
         async function refreshDataFromSheets() {
-            if (!confirm('Tải lại dữ liệu từ Google Sheets? Các thay đổi chưa lưu sẽ bị mất.')) {
-                return;
-            }
-            
             try {
                 // Show loading indicator
                 const refreshBtn = event.target;
@@ -1450,13 +1459,8 @@
                 refreshBtn.innerHTML = originalText;
                 refreshBtn.disabled = false;
                 
-                alert('Đã tải lại dữ liệu thành công từ Google Sheets!');
-                addSyncHistory('Tải lại dữ liệu thành công', 'success');
-                
             } catch (error) {
                 console.error('Refresh error:', error);
-                alert('Lỗi tải lại dữ liệu: ' + error.message);
-                addSyncHistory('Lỗi tải lại dữ liệu', 'error');
                 
                 // Restore button
                 if (event.target) {
@@ -1861,5 +1865,5 @@
             }, 500);
         });
     </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bcf3d89781472e',t:'MTc1NDYzNDQ5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bd1ea5a788fd9f',t:'MTc1NDYzNjI0OC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>
