@@ -1,0 +1,1865 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App GVCN - Quản lý lớp học thông minh</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://apis.google.com/js/api.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+        .gradient-bg { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-2px); box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        .quick-action { transition: all 0.2s ease; }
+        .quick-action:hover { transform: scale(1.05); }
+        .notification-badge { animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        .progress-bar { transition: width 0.5s ease; }
+        .modal-backdrop { backdrop-filter: blur(5px); }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="gradient-bg text-white shadow-lg">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <i class="fas fa-chalkboard-teacher text-2xl"></i>
+                    <div>
+                        <h1 class="text-xl font-bold">App GVCN</h1>
+                        <p class="text-sm opacity-90">Lớp 10A1 - Cô Nguyễn Thị Lan</p>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <div class="relative">
+                        <i class="fas fa-bell text-xl cursor-pointer"></i>
+                        <span class="absolute -top-2 -right-2 bg-red-500 text-xs rounded-full w-5 h-5 flex items-center justify-center notification-badge">3</span>
+                    </div>
+                    <div class="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                        <i class="fas fa-user text-sm"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Quick Actions Bar -->
+    <div class="bg-white shadow-sm border-b">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex space-x-3 overflow-x-auto">
+                <button onclick="quickAttendance()" class="quick-action bg-green-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-check-circle"></i>
+                    <span>Điểm danh nhanh</span>
+                </button>
+                <button onclick="quickDiscipline()" class="quick-action bg-orange-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span>Ghi nề nếp</span>
+                </button>
+                <button onclick="sendMessage()" class="quick-action bg-blue-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-paper-plane"></i>
+                    <span>Nhắn PHHS</span>
+                </button>
+                <button onclick="generateReport()" class="quick-action bg-purple-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Báo cáo</span>
+                </button>
+                <button onclick="openGoogleSheetsModal()" class="quick-action bg-emerald-500 text-white px-4 py-2 rounded-lg flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fab fa-google"></i>
+                    <span>Google Sheets</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div class="container mx-auto px-4 py-6">
+        <!-- Stats Overview -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <div class="bg-white rounded-lg p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Sĩ số lớp</p>
+                        <p class="text-2xl font-bold text-gray-800">42</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full">
+                        <i class="fas fa-users text-blue-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Có mặt hôm nay</p>
+                        <p class="text-2xl font-bold text-green-600">39</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full">
+                        <i class="fas fa-check-circle text-green-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Vắng không phép</p>
+                        <p class="text-2xl font-bold text-red-600">2</p>
+                    </div>
+                    <div class="bg-red-100 p-3 rounded-full">
+                        <i class="fas fa-times-circle text-red-600"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white rounded-lg p-4 shadow-sm card-hover">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-600 text-sm">Điểm nề nếp TB</p>
+                        <p class="text-2xl font-bold text-purple-600">8.5</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full">
+                        <i class="fas fa-star text-purple-600"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Left Column -->
+            <div class="lg:col-span-2 space-y-6">
+                <!-- Today's Tasks -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Công việc hôm nay</h2>
+                        <button class="text-blue-600 hover:text-blue-800">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center space-x-3 p-3 bg-yellow-50 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600">
+                            <div class="flex-1">
+                                <p class="font-medium">Điểm danh buổi sáng</p>
+                                <p class="text-sm text-gray-600">7:30 AM - Tiết 1</p>
+                            </div>
+                            <span class="bg-yellow-200 text-yellow-800 px-2 py-1 rounded text-xs">Đang chờ</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
+                            <input type="checkbox" checked class="w-4 h-4 text-blue-600">
+                            <div class="flex-1">
+                                <p class="font-medium line-through text-gray-500">Gửi thông báo họp PHHS</p>
+                                <p class="text-sm text-gray-600">Đã hoàn thành lúc 8:15 AM</p>
+                            </div>
+                            <span class="bg-green-200 text-green-800 px-2 py-1 rounded text-xs">Hoàn thành</span>
+                        </div>
+                        <div class="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
+                            <input type="checkbox" class="w-4 h-4 text-blue-600">
+                            <div class="flex-1">
+                                <p class="font-medium">Báo cáo tuần cho BGH</p>
+                                <p class="text-sm text-gray-600">Hạn: 5:00 PM hôm nay</p>
+                            </div>
+                            <span class="bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs">Quan trọng</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Student List -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-lg font-semibold text-gray-800">Danh sách học sinh</h2>
+                        <div class="flex space-x-2">
+                            <input type="text" placeholder="Tìm kiếm..." class="px-3 py-1 border rounded-lg text-sm">
+                            <button class="bg-blue-600 text-white px-3 py-1 rounded-lg text-sm">
+                                <i class="fas fa-search"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="text-left p-3">STT</th>
+                                    <th class="text-left p-3">Họ tên</th>
+                                    <th class="text-left p-3">Hôm nay</th>
+                                    <th class="text-left p-3">Nề nếp</th>
+                                    <th class="text-left p-3">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="studentList">
+                                <!-- Students will be populated here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="space-y-6">
+                <!-- Quick Stats -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Thống kê nhanh</h3>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Chuyên cần tuần này</span>
+                                <span>92.8%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-green-600 h-2 rounded-full progress-bar" style="width: 92.8%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Nề nếp trung bình</span>
+                                <span>8.5/10</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-blue-600 h-2 rounded-full progress-bar" style="width: 85%"></div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between text-sm mb-1">
+                                <span>Hoàn thành bài tập</span>
+                                <span>78%</span>
+                            </div>
+                            <div class="w-full bg-gray-200 rounded-full h-2">
+                                <div class="bg-purple-600 h-2 rounded-full progress-bar" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Alerts -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Cảnh báo & Nhắc việc</h3>
+                    <div class="space-y-3">
+                        <div class="bg-red-50 border-l-4 border-red-400 p-3">
+                            <div class="flex">
+                                <i class="fas fa-exclamation-triangle text-red-400 mt-1"></i>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-red-800">Học sinh cần hỗ trợ</p>
+                                    <p class="text-xs text-red-600">Nguyễn Văn A - vắng 4 lần tuần này</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-yellow-50 border-l-4 border-yellow-400 p-3">
+                            <div class="flex">
+                                <i class="fas fa-clock text-yellow-400 mt-1"></i>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-yellow-800">Họp PHHS</p>
+                                    <p class="text-xs text-yellow-600">Thứ 7 tuần sau - 8:00 AM</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 border-l-4 border-blue-400 p-3">
+                            <div class="flex">
+                                <i class="fas fa-info-circle text-blue-400 mt-1"></i>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium text-blue-800">Thu quỹ lớp</p>
+                                    <p class="text-xs text-blue-600">Còn 5 học sinh chưa nộp</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Google Sheets Status -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-800">Google Sheets</h3>
+                        <div id="sheetsStatus" class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                            <span class="text-xs text-gray-600">Chưa kết nối</span>
+                        </div>
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex items-center justify-between text-sm">
+                            <span>Lần đồng bộ cuối:</span>
+                            <span id="lastSync" class="text-gray-600">Chưa có</span>
+                        </div>
+                        <div class="flex items-center justify-between text-sm">
+                            <span>Tự động đồng bộ:</span>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="autoSync" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                            </label>
+                        </div>
+                        <button onclick="openGoogleSheetsModal()" class="w-full bg-emerald-600 text-white py-2 rounded-lg text-sm hover:bg-emerald-700 mb-2">
+                            <i class="fab fa-google mr-2"></i>Quản lý kết nối
+                        </button>
+                        <button onclick="openSpreadsheet()" class="w-full bg-blue-600 text-white py-2 rounded-lg text-sm hover:bg-blue-700 mb-2">
+                            <i class="fas fa-external-link-alt mr-2"></i>Mở Google Sheets
+                        </button>
+                        <button onclick="refreshDataFromSheets()" class="w-full bg-gray-600 text-white py-2 rounded-lg text-sm hover:bg-gray-700">
+                            <i class="fas fa-sync-alt mr-2"></i>Tải lại dữ liệu
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Messages -->
+                <div class="bg-white rounded-lg shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Tin nhắn gần đây</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-user text-blue-600 text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Phụ huynh Trần Thị B</p>
+                                <p class="text-xs text-gray-600">Con em hôm nay bị ốm, xin phép nghỉ học</p>
+                                <p class="text-xs text-gray-400">10 phút trước</p>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <i class="fas fa-check text-green-600 text-xs"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-sm font-medium">Đã gửi thông báo</p>
+                                <p class="text-xs text-gray-600">Nhắc nhở nộp bài tập - 42 phụ huynh</p>
+                                <p class="text-xs text-gray-400">1 giờ trước</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Attendance Modal -->
+    <div id="attendanceModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Điểm danh nhanh - Lớp 10A1</h3>
+                        <button onclick="closeModal('attendanceModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <p class="text-sm text-gray-600 mt-1">Thứ 2, 15/01/2024 - Tiết 1</p>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3" id="attendanceGrid">
+                        <!-- Attendance grid will be populated here -->
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button onclick="closeModal('attendanceModal')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
+                        <button onclick="saveAttendance()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Lưu điểm danh</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Modal -->
+    <div id="messageModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-2xl w-full">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Gửi tin nhắn phụ huynh</h3>
+                        <button onclick="closeModal('messageModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Người nhận</label>
+                            <select class="w-full border border-gray-300 rounded-lg px-3 py-2">
+                                <option>Toàn lớp (42 phụ huynh)</option>
+                                <option>Nhóm học sinh vắng</option>
+                                <option>Nhóm học sinh yếu</option>
+                                <option>Chọn riêng lẻ...</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Mẫu tin nhắn</label>
+                            <select onchange="loadMessageTemplate(this.value)" class="w-full border border-gray-300 rounded-lg px-3 py-2 mb-2">
+                                <option value="">Chọn mẫu có sẵn...</option>
+                                <option value="absent">Thông báo vắng học</option>
+                                <option value="late">Thông báo đi trễ</option>
+                                <option value="homework">Nhắc nộp bài tập</option>
+                                <option value="meeting">Mời họp phụ huynh</option>
+                                <option value="fee">Thông báo thu phí</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Nội dung</label>
+                            <textarea id="messageContent" rows="6" class="w-full border border-gray-300 rounded-lg px-3 py-2" placeholder="Nhập nội dung tin nhắn..."></textarea>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">Kênh gửi</label>
+                            <div class="flex space-x-4">
+                                <label class="flex items-center">
+                                    <input type="checkbox" checked class="mr-2">
+                                    <span class="text-sm">Zalo OA</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">SMS</span>
+                                </label>
+                                <label class="flex items-center">
+                                    <input type="checkbox" class="mr-2">
+                                    <span class="text-sm">Email</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mt-6 flex justify-end space-x-3">
+                        <button onclick="closeModal('messageModal')" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Hủy</button>
+                        <button onclick="sendMessageToParents()" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Gửi tin nhắn</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Sheets Modal -->
+    <div id="googleSheetsModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Kết nối Google Sheets</h3>
+                        <button onclick="closeModal('googleSheetsModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <!-- Connection Status -->
+                    <div class="mb-6">
+                        <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                            <div class="flex items-center space-x-3">
+                                <div id="connectionIndicator" class="w-3 h-3 bg-gray-400 rounded-full"></div>
+                                <div>
+                                    <p class="font-medium" id="connectionStatus">Chưa kết nối</p>
+                                    <p class="text-sm text-gray-600" id="connectionDetails">Nhấn "Kết nối" để bắt đầu</p>
+                                </div>
+                            </div>
+                            <button id="connectBtn" onclick="connectToGoogle()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                <i class="fab fa-google mr-2"></i>Kết nối
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sheets Management -->
+                    <div id="sheetsManagement" class="hidden">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Available Sheets -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-4">Sheets hiện có</h4>
+                                <div class="space-y-2" id="availableSheets">
+                                    <div class="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectSheet('attendance')">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium">Điểm danh lớp 10A1</p>
+                                                <p class="text-sm text-gray-600">Cập nhật: 2 giờ trước</p>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectSheet('discipline')">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium">Nề nếp học sinh</p>
+                                                <p class="text-sm text-gray-600">Cập nhật: 1 ngày trước</p>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                    <div class="p-3 border rounded-lg hover:bg-gray-50 cursor-pointer" onclick="selectSheet('scores')">
+                                        <div class="flex items-center justify-between">
+                                            <div>
+                                                <p class="font-medium">Điểm số học tập</p>
+                                                <p class="text-sm text-gray-600">Cập nhật: 3 ngày trước</p>
+                                            </div>
+                                            <i class="fas fa-external-link-alt text-gray-400"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onclick="createNewSheet()" class="w-full mt-3 border-2 border-dashed border-gray-300 rounded-lg p-3 text-gray-600 hover:border-gray-400 hover:text-gray-800">
+                                    <i class="fas fa-plus mr-2"></i>Tạo Sheet mới
+                                </button>
+                            </div>
+
+                            <!-- Sync Settings -->
+                            <div>
+                                <h4 class="font-semibold text-gray-800 mb-4">Cài đặt đồng bộ</h4>
+                                <div class="space-y-4">
+                                    <div class="p-4 border rounded-lg">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <label class="font-medium">Tự động đồng bộ</label>
+                                            <label class="relative inline-flex items-center cursor-pointer">
+                                                <input type="checkbox" id="autoSyncToggle" class="sr-only peer" onchange="toggleAutoSync()">
+                                                <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                                            </label>
+                                        </div>
+                                        <select id="syncInterval" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm">
+                                            <option value="5">Mỗi 5 phút</option>
+                                            <option value="15" selected>Mỗi 15 phút</option>
+                                            <option value="30">Mỗi 30 phút</option>
+                                            <option value="60">Mỗi giờ</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="p-4 border rounded-lg">
+                                        <label class="font-medium block mb-2">Dữ liệu đồng bộ</label>
+                                        <div class="space-y-2">
+                                            <label class="flex items-center">
+                                                <input type="checkbox" checked class="mr-2">
+                                                <span class="text-sm">Điểm danh</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" checked class="mr-2">
+                                                <span class="text-sm">Nề nếp</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Điểm số</span>
+                                            </label>
+                                            <label class="flex items-center">
+                                                <input type="checkbox" class="mr-2">
+                                                <span class="text-sm">Thông tin học sinh</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="space-y-2">
+                                        <button onclick="syncNow()" class="w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
+                                            <i class="fas fa-sync-alt mr-2"></i>Đồng bộ ngay
+                                        </button>
+                                        <button onclick="exportToSheets()" class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700">
+                                            <i class="fas fa-upload mr-2"></i>Xuất dữ liệu
+                                        </button>
+                                        <button onclick="importFromSheets()" class="w-full bg-purple-600 text-white py-2 rounded-lg hover:bg-purple-700">
+                                            <i class="fas fa-download mr-2"></i>Nhập dữ liệu
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Sync History -->
+                        <div class="mt-6">
+                            <h4 class="font-semibold text-gray-800 mb-4">Lịch sử đồng bộ</h4>
+                            <div class="bg-gray-50 rounded-lg p-4">
+                                <div class="space-y-2" id="syncHistory">
+                                    <div class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-check-circle text-green-600"></i>
+                                            <span>Đồng bộ điểm danh thành công</span>
+                                        </div>
+                                        <span class="text-gray-600">2 phút trước</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-check-circle text-green-600"></i>
+                                            <span>Xuất báo cáo tuần</span>
+                                        </div>
+                                        <span class="text-gray-600">1 giờ trước</span>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center space-x-2">
+                                            <i class="fas fa-exclamation-triangle text-yellow-600"></i>
+                                            <span>Đồng bộ nề nếp - có cảnh báo</span>
+                                        </div>
+                                        <span class="text-gray-600">3 giờ trước</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Template Selection -->
+                    <div id="templateSelection" class="hidden">
+                        <h4 class="font-semibold text-gray-800 mb-4">Chọn mẫu Sheet</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="useTemplate('attendance')">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-check-circle text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mẫu điểm danh</p>
+                                        <p class="text-sm text-gray-600">Theo dõi chuyên cần hàng ngày</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="useTemplate('discipline')">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-star text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mẫu nề nếp</p>
+                                        <p class="text-sm text-gray-600">Quản lý điểm nề nếp học sinh</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="useTemplate('scores')">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mẫu điểm số</p>
+                                        <p class="text-sm text-gray-600">Theo dõi kết quả học tập</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="border rounded-lg p-4 hover:bg-gray-50 cursor-pointer" onclick="useTemplate('comprehensive')">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-clipboard-list text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">Mẫu tổng hợp</p>
+                                        <p class="text-sm text-gray-600">Tất cả dữ liệu trong một sheet</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Report Modal -->
+    <div id="reportModal" class="fixed inset-0 bg-black bg-opacity-50 modal-backdrop hidden z-50">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+                <div class="p-6 border-b">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-lg font-semibold">Báo cáo & Thống kê</h3>
+                        <button onclick="closeModal('reportModal')" class="text-gray-400 hover:text-gray-600">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-800">Báo cáo nhanh</h4>
+                            <div class="space-y-2">
+                                <button onclick="generateQuickReport('daily')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-calendar-day text-blue-600 mr-3"></i>
+                                    Báo cáo ngày
+                                </button>
+                                <button onclick="generateQuickReport('weekly')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-calendar-week text-green-600 mr-3"></i>
+                                    Báo cáo tuần
+                                </button>
+                                <button onclick="generateQuickReport('monthly')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-calendar-alt text-purple-600 mr-3"></i>
+                                    Báo cáo tháng
+                                </button>
+                                <button onclick="generateQuickReport('semester')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-graduation-cap text-orange-600 mr-3"></i>
+                                    Báo cáo học kỳ
+                                </button>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <h4 class="font-semibold text-gray-800">Xuất dữ liệu</h4>
+                            <div class="space-y-2">
+                                <button onclick="exportData('pdf')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-file-pdf text-red-600 mr-3"></i>
+                                    Xuất PDF
+                                </button>
+                                <button onclick="exportData('excel')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-file-excel text-green-600 mr-3"></i>
+                                    Xuất Excel
+                                </button>
+                                <button onclick="exportData('sheets')" class="w-full text-left p-3 border rounded-lg hover:bg-gray-50">
+                                    <i class="fas fa-table text-blue-600 mr-3"></i>
+                                    Gửi Google Sheets
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="reportPreview" class="mt-6 hidden">
+                        <h4 class="font-semibold text-gray-800 mb-4">Xem trước báo cáo</h4>
+                        <div class="border rounded-lg p-4 bg-gray-50">
+                            <div id="reportContent"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Google Apps Script Configuration
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzmcXgVqrLT9Tr_LstxUgX3QlIu5MdjoXDSshIuK1Zli33GwDssFc3AIr1t2rI9HcGp/exec';
+        const SPREADSHEET_ID = '1IDxTkS9nRAFlsZcnIeC-Ti8rvkNIevqh4sBYJSbCqzo';
+        const SPREADSHEET_URL = 'https://docs.google.com/spreadsheets/d/1IDxTkS9nRAFlsZcnIeC-Ti8rvkNIevqh4sBYJSbCqzo/edit?usp=sharing';
+        
+        // Connection state
+        let isConnected = false;
+        let autoSyncInterval = null;
+        let currentSpreadsheetId = SPREADSHEET_ID;
+
+        // Data will be loaded from Google Sheets
+        let students = [];
+        let classInfo = {};
+        let attendanceData = {};
+        let disciplineData = {};
+        let isDataLoaded = false;
+
+        // Message templates
+        const messageTemplates = {
+            absent: "Kính gửi Quý phụ huynh,\n\nCon em {name} vắng mặt trong tiết học hôm nay mà không có đơn xin phép. Kính mong Quý phụ huynh liên hệ với cô để được hỗ trợ.\n\nTrân trọng,\nCô {teacher}",
+            late: "Kính gửi Quý phụ huynh,\n\nCon em {name} đã đi học trễ lần thứ {count} trong tuần này. Kính mong Quý phụ huynh quan tâm giúp con đi học đúng giờ.\n\nTrân trọng,\nCô {teacher}",
+            homework: "Kính gửi Quý phụ huynh,\n\nCon em {name} chưa nộp bài tập môn {subject}. Kính mong Quý phụ huynh nhắc nhở con hoàn thành bài tập đúng hạn.\n\nTrân trọng,\nCô {teacher}",
+            meeting: "Kính gửi Quý phụ huynh,\n\nTrường tổ chức họp phụ huynh vào {date} lúc {time} tại {location}. Kính mong Quý phụ huynh sắp xếp tham dự.\n\nTrân trọng,\nCô {teacher}",
+            fee: "Kính gửi Quý phụ huynh,\n\nLớp đang thu {fee_name} với số tiền {amount}. Kính mong Quý phụ huynh cho con nộp trước ngày {deadline}.\n\nTrân trọng,\nCô {teacher}"
+        };
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeGoogleAPI();
+            loadDataFromSheets();
+        });
+
+        // Load all data from Google Sheets
+        async function loadDataFromSheets() {
+            try {
+                showLoadingState();
+                
+                // Load student list
+                await loadStudentsFromSheets();
+                
+                // Load attendance data
+                await loadAttendanceFromSheets();
+                
+                // Load discipline data
+                await loadDisciplineFromSheets();
+                
+                // Load class information
+                await loadClassInfoFromSheets();
+                
+                // Update UI with loaded data
+                updateDashboardStats();
+                loadStudentList();
+                loadAttendanceGrid();
+                
+                isDataLoaded = true;
+                hideLoadingState();
+                
+                console.log('Đã tải dữ liệu từ Google Sheets thành công');
+            } catch (error) {
+                console.error('Lỗi tải dữ liệu:', error);
+                hideLoadingState();
+                showErrorState('Không thể tải dữ liệu từ Google Sheets. Vui lòng kiểm tra kết nối.');
+            }
+        }
+
+        // Load students from Google Sheets
+        async function loadStudentsFromSheets() {
+            try {
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=DanhSach`, {
+                    method: 'GET'
+                });
+                
+                const text = await response.text();
+                const jsonText = text.substring(47).slice(0, -2); // Remove Google's wrapper
+                const data = JSON.parse(jsonText);
+                
+                students = [];
+                
+                if (data.table && data.table.rows) {
+                    data.table.rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header row
+                        
+                        const cells = row.c || [];
+                        if (cells.length >= 2 && cells[1] && cells[1].v) {
+                            students.push({
+                                id: index,
+                                stt: cells[0] ? cells[0].v : index,
+                                name: cells[1].v,
+                                gender: cells[2] ? cells[2].v : '',
+                                birthDate: cells[3] ? cells[3].v : '',
+                                address: cells[4] ? cells[4].v : '',
+                                parentPhone: cells[5] ? cells[5].v : '',
+                                status: 'present', // Default status
+                                discipline: 8.0, // Default discipline score
+                                absences: 0
+                            });
+                        }
+                    });
+                }
+                
+                console.log(`Đã tải ${students.length} học sinh từ Google Sheets`);
+            } catch (error) {
+                console.error('Lỗi tải danh sách học sinh:', error);
+                // Fallback to sample data if loading fails
+                students = [
+                    { id: 1, name: "Đang tải dữ liệu...", status: "present", discipline: 0, absences: 0 }
+                ];
+            }
+        }
+
+        // Load attendance data from Google Sheets
+        async function loadAttendanceFromSheets() {
+            try {
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=DiemDanh`, {
+                    method: 'GET'
+                });
+                
+                const text = await response.text();
+                const jsonText = text.substring(47).slice(0, -2);
+                const data = JSON.parse(jsonText);
+                
+                attendanceData = {};
+                
+                if (data.table && data.table.rows) {
+                    data.table.rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header
+                        
+                        const cells = row.c || [];
+                        if (cells.length >= 3) {
+                            const studentName = cells[1] ? cells[1].v : '';
+                            const date = cells[2] ? cells[2].v : '';
+                            const status = cells[3] ? cells[3].v : 'present';
+                            
+                            if (!attendanceData[studentName]) {
+                                attendanceData[studentName] = {};
+                            }
+                            attendanceData[studentName][date] = status;
+                            
+                            // Update student status for today
+                            const today = new Date().toDateString();
+                            const student = students.find(s => s.name === studentName);
+                            if (student && date === today) {
+                                student.status = status;
+                            }
+                        }
+                    });
+                }
+                
+                console.log('Đã tải dữ liệu điểm danh từ Google Sheets');
+            } catch (error) {
+                console.error('Lỗi tải dữ liệu điểm danh:', error);
+            }
+        }
+
+        // Load discipline data from Google Sheets
+        async function loadDisciplineFromSheets() {
+            try {
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=NeNep`, {
+                    method: 'GET'
+                });
+                
+                const text = await response.text();
+                const jsonText = text.substring(47).slice(0, -2);
+                const data = JSON.parse(jsonText);
+                
+                disciplineData = {};
+                
+                if (data.table && data.table.rows) {
+                    data.table.rows.forEach((row, index) => {
+                        if (index === 0) return; // Skip header
+                        
+                        const cells = row.c || [];
+                        if (cells.length >= 3) {
+                            const studentName = cells[1] ? cells[1].v : '';
+                            const score = cells[2] ? parseFloat(cells[2].v) : 8.0;
+                            const notes = cells[3] ? cells[3].v : '';
+                            
+                            disciplineData[studentName] = {
+                                score: score,
+                                notes: notes
+                            };
+                            
+                            // Update student discipline score
+                            const student = students.find(s => s.name === studentName);
+                            if (student) {
+                                student.discipline = score;
+                            }
+                        }
+                    });
+                }
+                
+                console.log('Đã tải dữ liệu nề nếp từ Google Sheets');
+            } catch (error) {
+                console.error('Lỗi tải dữ liệu nề nếp:', error);
+            }
+        }
+
+        // Load class information from Google Sheets
+        async function loadClassInfoFromSheets() {
+            try {
+                const response = await fetch(`https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:json&sheet=ThongTinLop`, {
+                    method: 'GET'
+                });
+                
+                const text = await response.text();
+                const jsonText = text.substring(47).slice(0, -2);
+                const data = JSON.parse(jsonText);
+                
+                if (data.table && data.table.rows && data.table.rows.length > 1) {
+                    const row = data.table.rows[1]; // First data row
+                    const cells = row.c || [];
+                    
+                    classInfo = {
+                        className: cells[0] ? cells[0].v : '10A1',
+                        teacher: cells[1] ? cells[1].v : 'Cô Nguyễn Thị Lan',
+                        totalStudents: cells[2] ? cells[2].v : students.length,
+                        schoolYear: cells[3] ? cells[3].v : '2023-2024'
+                    };
+                    
+                    // Update header with class info
+                    updateClassHeader();
+                }
+                
+                console.log('Đã tải thông tin lớp từ Google Sheets');
+            } catch (error) {
+                console.error('Lỗi tải thông tin lớp:', error);
+                // Use default class info
+                classInfo = {
+                    className: '10A1',
+                    teacher: 'Cô Nguyễn Thị Lan',
+                    totalStudents: students.length,
+                    schoolYear: '2023-2024'
+                };
+            }
+        }
+
+        // Update class header with loaded data
+        function updateClassHeader() {
+            const headerInfo = document.querySelector('header p');
+            if (headerInfo && classInfo.className && classInfo.teacher) {
+                headerInfo.textContent = `Lớp ${classInfo.className} - ${classInfo.teacher}`;
+            }
+        }
+
+        // Update dashboard statistics with real data
+        function updateDashboardStats() {
+            if (students.length === 0) return;
+            
+            const totalStudents = students.length;
+            const presentToday = students.filter(s => s.status === 'present').length;
+            const absentToday = students.filter(s => s.status === 'absent').length;
+            const avgDiscipline = students.reduce((sum, s) => sum + (s.discipline || 0), 0) / totalStudents;
+            
+            // Update stat cards
+            const statCards = document.querySelectorAll('.bg-white.rounded-lg.p-4.shadow-sm.card-hover');
+            if (statCards.length >= 4) {
+                // Total students
+                statCards[0].querySelector('.text-2xl.font-bold').textContent = totalStudents;
+                
+                // Present today
+                statCards[1].querySelector('.text-2xl.font-bold').textContent = presentToday;
+                
+                // Absent today
+                statCards[2].querySelector('.text-2xl.font-bold').textContent = absentToday;
+                
+                // Average discipline
+                statCards[3].querySelector('.text-2xl.font-bold').textContent = avgDiscipline.toFixed(1);
+            }
+            
+            // Update progress bars
+            const attendanceRate = totalStudents > 0 ? (presentToday / totalStudents * 100) : 0;
+            const disciplineRate = avgDiscipline * 10; // Convert to percentage
+            
+            const progressBars = document.querySelectorAll('.progress-bar');
+            if (progressBars.length >= 2) {
+                progressBars[0].style.width = `${attendanceRate}%`;
+                progressBars[1].style.width = `${disciplineRate}%`;
+                
+                // Update percentage text
+                const percentTexts = document.querySelectorAll('.flex.justify-between.text-sm span:last-child');
+                if (percentTexts.length >= 2) {
+                    percentTexts[0].textContent = `${attendanceRate.toFixed(1)}%`;
+                    percentTexts[1].textContent = `${avgDiscipline.toFixed(1)}/10`;
+                }
+            }
+        }
+
+        // Show loading state
+        function showLoadingState() {
+            const mainContent = document.querySelector('.container.mx-auto.px-4.py-6');
+            if (mainContent) {
+                mainContent.innerHTML = `
+                    <div class="flex items-center justify-center min-h-[400px]">
+                        <div class="text-center">
+                            <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                            <p class="text-gray-600">Đang tải dữ liệu từ Google Sheets...</p>
+                            <p class="text-sm text-gray-500 mt-2">Vui lòng đợi trong giây lát</p>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Hide loading state and restore content
+        function hideLoadingState() {
+            // Reload the page content - in a real app, you'd restore the original HTML
+            location.reload();
+        }
+
+        // Show error state
+        function showErrorState(message) {
+            const mainContent = document.querySelector('.container.mx-auto.px-4.py-6');
+            if (mainContent) {
+                mainContent.innerHTML = `
+                    <div class="flex items-center justify-center min-h-[400px]">
+                        <div class="text-center">
+                            <div class="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-exclamation-triangle text-red-600 text-2xl"></i>
+                            </div>
+                            <h3 class="text-lg font-semibold text-gray-800 mb-2">Lỗi tải dữ liệu</h3>
+                            <p class="text-gray-600 mb-4">${message}</p>
+                            <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">
+                                <i class="fas fa-refresh mr-2"></i>Thử lại
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize Google API
+        async function initializeGoogleAPI() {
+            // Note: In a real implementation, you would need to set up Google API credentials
+            // This is a demo showing the UI flow
+            console.log('Google API initialization would happen here');
+        }
+
+        // Google Sheets Functions
+        function openGoogleSheetsModal() {
+            document.getElementById('googleSheetsModal').classList.remove('hidden');
+        }
+
+        async function connectToGoogle() {
+            const connectBtn = document.getElementById('connectBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const connectionDetails = document.getElementById('connectionDetails');
+            const connectionIndicator = document.getElementById('connectionIndicator');
+            
+            // Show loading state
+            connectBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang kết nối...';
+            connectBtn.disabled = true;
+            
+            try {
+                // Test connection to Google Apps Script
+                const response = await fetch(GOOGLE_SCRIPT_URL + '?action=test', {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    
+                    // Update UI to show connected state
+                    isConnected = true;
+                    connectionStatus.textContent = 'Đã kết nối';
+                    connectionDetails.textContent = 'Google Apps Script - Sẵn sàng đồng bộ';
+                    connectionIndicator.className = 'w-3 h-3 bg-green-500 rounded-full';
+                    
+                    connectBtn.innerHTML = '<i class="fas fa-unlink mr-2"></i>Ngắt kết nối';
+                    connectBtn.onclick = disconnectFromGoogle;
+                    connectBtn.disabled = false;
+                    connectBtn.className = 'bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700';
+                    
+                    // Show sheets management
+                    document.getElementById('sheetsManagement').classList.remove('hidden');
+                    
+                    // Update main dashboard status
+                    updateMainDashboardStatus();
+                    
+                    alert('Kết nối Google Apps Script thành công!');
+                } else {
+                    throw new Error('Không thể kết nối');
+                }
+            } catch (error) {
+                console.error('Connection error:', error);
+                alert('Lỗi kết nối: ' + error.message);
+                
+                // Reset button state
+                connectBtn.innerHTML = '<i class="fab fa-google mr-2"></i>Kết nối';
+                connectBtn.disabled = false;
+            }
+        }
+
+        function disconnectFromGoogle() {
+            isConnected = false;
+            const connectBtn = document.getElementById('connectBtn');
+            const connectionStatus = document.getElementById('connectionStatus');
+            const connectionDetails = document.getElementById('connectionDetails');
+            const connectionIndicator = document.getElementById('connectionIndicator');
+            
+            // Reset UI
+            connectionStatus.textContent = 'Chưa kết nối';
+            connectionDetails.textContent = 'Nhấn "Kết nối" để bắt đầu';
+            connectionIndicator.className = 'w-3 h-3 bg-gray-400 rounded-full';
+            
+            connectBtn.innerHTML = '<i class="fab fa-google mr-2"></i>Kết nối';
+            connectBtn.onclick = connectToGoogle;
+            connectBtn.className = 'bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700';
+            
+            // Hide sheets management
+            document.getElementById('sheetsManagement').classList.add('hidden');
+            
+            // Stop auto sync
+            if (autoSyncInterval) {
+                clearInterval(autoSyncInterval);
+                autoSyncInterval = null;
+            }
+            
+            // Update main dashboard
+            updateMainDashboardStatus();
+            
+            alert('Đã ngắt kết nối Google Sheets');
+        }
+
+        function updateMainDashboardStatus() {
+            const sheetsStatus = document.getElementById('sheetsStatus');
+            const lastSync = document.getElementById('lastSync');
+            
+            if (isConnected) {
+                sheetsStatus.innerHTML = `
+                    <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span class="text-xs text-green-600">Đã kết nối</span>
+                `;
+                lastSync.textContent = new Date().toLocaleString('vi-VN');
+            } else {
+                sheetsStatus.innerHTML = `
+                    <div class="w-2 h-2 bg-gray-400 rounded-full"></div>
+                    <span class="text-xs text-gray-600">Chưa kết nối</span>
+                `;
+                lastSync.textContent = 'Chưa có';
+            }
+        }
+
+        function selectSheet(sheetType) {
+            const sheetNames = {
+                attendance: 'Điểm danh lớp 10A1',
+                discipline: 'Nề nếp học sinh',
+                scores: 'Điểm số học tập'
+            };
+            
+            // Open the actual Google Sheets document
+            const sheetUrl = `${SPREADSHEET_URL}&gid=0`; // You can specify different gid for different sheets
+            window.open(sheetUrl, '_blank');
+            
+            alert(`Đã mở sheet: ${sheetNames[sheetType]}\n\nSheet đã được mở trong tab mới. Bạn có thể chỉnh sửa trực tiếp trên Google Sheets.`);
+        }
+
+        function createNewSheet() {
+            document.getElementById('sheetsManagement').classList.add('hidden');
+            document.getElementById('templateSelection').classList.remove('hidden');
+        }
+
+        async function useTemplate(templateType) {
+            const templates = {
+                attendance: 'Mẫu điểm danh',
+                discipline: 'Mẫu nề nếp',
+                scores: 'Mẫu điểm số',
+                comprehensive: 'Mẫu tổng hợp'
+            };
+            
+            if (!isConnected) {
+                alert('Vui lòng kết nối Google Apps Script trước');
+                return;
+            }
+            
+            try {
+                const templateData = {
+                    action: 'createTemplate',
+                    templateType: templateType,
+                    templateName: templates[templateType],
+                    spreadsheetId: SPREADSHEET_ID,
+                    spreadsheetUrl: SPREADSHEET_URL,
+                    classInfo: {
+                        className: '10A1',
+                        teacher: 'Cô Nguyễn Thị Lan',
+                        students: students
+                    }
+                };
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(templateData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    alert(`Đã tạo sheet mới: ${templates[templateType]}\n\nSheet đã được tạo với cấu trúc dữ liệu phù hợp và sẵn sàng đồng bộ.\n\nURL: ${result.spreadsheetUrl || 'Đã tạo thành công'}`);
+                    
+                    // Go back to sheets management
+                    document.getElementById('templateSelection').classList.add('hidden');
+                    document.getElementById('sheetsManagement').classList.remove('hidden');
+                    
+                    // Add new sheet to the list
+                    addNewSheetToList(templateType, templates[templateType]);
+                    
+                    // Add to sync history
+                    addSyncHistory(`Tạo ${templates[templateType]} thành công`, 'success');
+                } else {
+                    throw new Error('Lỗi tạo template');
+                }
+            } catch (error) {
+                console.error('Template creation error:', error);
+                alert('Lỗi tạo template: ' + error.message);
+            }
+        }
+
+        function addNewSheetToList(type, name) {
+            const availableSheets = document.getElementById('availableSheets');
+            const newSheet = document.createElement('div');
+            newSheet.className = 'p-3 border rounded-lg hover:bg-gray-50 cursor-pointer';
+            newSheet.onclick = () => selectSheet(type);
+            
+            newSheet.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="font-medium">${name}</p>
+                        <p class="text-sm text-gray-600">Vừa tạo</p>
+                    </div>
+                    <i class="fas fa-external-link-alt text-gray-400"></i>
+                </div>
+            `;
+            
+            availableSheets.appendChild(newSheet);
+        }
+
+        function toggleAutoSync() {
+            const toggle = document.getElementById('autoSyncToggle');
+            const interval = parseInt(document.getElementById('syncInterval').value);
+            
+            if (toggle.checked) {
+                // Start auto sync
+                autoSyncInterval = setInterval(() => {
+                    syncNow(true); // Silent sync
+                }, interval * 60 * 1000);
+                
+                alert(`Đã bật tự động đồng bộ mỗi ${interval} phút`);
+            } else {
+                // Stop auto sync
+                if (autoSyncInterval) {
+                    clearInterval(autoSyncInterval);
+                    autoSyncInterval = null;
+                }
+                alert('Đã tắt tự động đồng bộ');
+            }
+        }
+
+        async function syncNow(silent = false) {
+            if (!isConnected) {
+                alert('Vui lòng kết nối Google Apps Script trước');
+                return;
+            }
+            
+            if (!silent) {
+                alert('Đang đồng bộ dữ liệu...');
+            }
+            
+            try {
+                // Prepare data to sync
+                const syncData = {
+                    action: 'syncData',
+                    spreadsheetId: SPREADSHEET_ID,
+                    spreadsheetUrl: SPREADSHEET_URL,
+                    students: students,
+                    classInfo: {
+                        className: '10A1',
+                        teacher: 'Cô Nguyễn Thị Lan',
+                        totalStudents: students.length,
+                        date: new Date().toISOString()
+                    },
+                    stats: {
+                        present: students.filter(s => s.status === 'present').length,
+                        absent: students.filter(s => s.status === 'absent').length,
+                        late: students.filter(s => s.status === 'late').length,
+                        avgDiscipline: students.reduce((sum, s) => sum + s.discipline, 0) / students.length
+                    }
+                };
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(syncData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    // Add to sync history
+                    addSyncHistory('Đồng bộ thành công', 'success');
+                    
+                    // Update last sync time
+                    updateMainDashboardStatus();
+                    
+                    if (!silent) {
+                        alert('Đồng bộ hoàn tất!\n\nDữ liệu đã được gửi lên Google Sheets.');
+                    }
+                } else {
+                    throw new Error('Lỗi đồng bộ dữ liệu');
+                }
+            } catch (error) {
+                console.error('Sync error:', error);
+                addSyncHistory('Lỗi đồng bộ: ' + error.message, 'error');
+                
+                if (!silent) {
+                    alert('Lỗi đồng bộ: ' + error.message);
+                }
+            }
+        }
+
+        async function exportToSheets() {
+            if (!isConnected) {
+                alert('Vui lòng kết nối Google Apps Script trước');
+                return;
+            }
+            
+            alert('Đang xuất dữ liệu lên Google Sheets...');
+            
+            try {
+                const exportData = {
+                    action: 'exportData',
+                    spreadsheetId: SPREADSHEET_ID,
+                    spreadsheetUrl: SPREADSHEET_URL,
+                    students: students,
+                    classInfo: {
+                        className: '10A1',
+                        teacher: 'Cô Nguyễn Thị Lan',
+                        exportDate: new Date().toISOString(),
+                        totalStudents: students.length
+                    },
+                    attendanceData: students.map(s => ({
+                        id: s.id,
+                        name: s.name,
+                        status: s.status,
+                        date: new Date().toDateString()
+                    })),
+                    disciplineData: students.map(s => ({
+                        id: s.id,
+                        name: s.name,
+                        score: s.discipline,
+                        absences: s.absences
+                    }))
+                };
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(exportData)
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    addSyncHistory('Xuất dữ liệu thành công', 'success');
+                    alert('Đã xuất tất cả dữ liệu lên Google Sheets!\n\nDữ liệu đã được tạo thành các sheet riêng biệt.');
+                } else {
+                    throw new Error('Lỗi xuất dữ liệu');
+                }
+            } catch (error) {
+                console.error('Export error:', error);
+                addSyncHistory('Lỗi xuất dữ liệu: ' + error.message, 'error');
+                alert('Lỗi xuất dữ liệu: ' + error.message);
+            }
+        }
+
+        async function importFromSheets() {
+            if (!isConnected) {
+                alert('Vui lòng kết nối Google Apps Script trước');
+                return;
+            }
+            
+            alert('Đang nhập dữ liệu từ Google Sheets...');
+            
+            try {
+                const response = await fetch(GOOGLE_SCRIPT_URL + `?action=importData&spreadsheetId=${SPREADSHEET_ID}`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                
+                if (response.ok) {
+                    const result = await response.json();
+                    
+                    if (result.students && result.students.length > 0) {
+                        // Update local student data
+                        result.students.forEach(importedStudent => {
+                            const localStudent = students.find(s => s.id === importedStudent.id);
+                            if (localStudent) {
+                                // Update existing student
+                                localStudent.status = importedStudent.status || localStudent.status;
+                                localStudent.discipline = importedStudent.discipline || localStudent.discipline;
+                                localStudent.absences = importedStudent.absences || localStudent.absences;
+                            } else {
+                                // Add new student
+                                students.push(importedStudent);
+                            }
+                        });
+                        
+                        addSyncHistory('Nhập dữ liệu thành công', 'success');
+                        alert('Đã nhập dữ liệu từ Google Sheets!\n\nDữ liệu mới đã được cập nhật vào hệ thống.');
+                        
+                        // Refresh displays
+                        loadStudentList();
+                        loadAttendanceGrid();
+                    } else {
+                        alert('Không có dữ liệu mới để nhập từ Google Sheets.');
+                    }
+                } else {
+                    throw new Error('Lỗi nhập dữ liệu');
+                }
+            } catch (error) {
+                console.error('Import error:', error);
+                addSyncHistory('Lỗi nhập dữ liệu: ' + error.message, 'error');
+                alert('Lỗi nhập dữ liệu: ' + error.message);
+            }
+        }
+
+        function openSpreadsheet() {
+            window.open(SPREADSHEET_URL, '_blank');
+        }
+
+        // Refresh data from Google Sheets
+        async function refreshDataFromSheets() {
+            if (!confirm('Tải lại dữ liệu từ Google Sheets? Các thay đổi chưa lưu sẽ bị mất.')) {
+                return;
+            }
+            
+            try {
+                // Show loading indicator
+                const refreshBtn = event.target;
+                const originalText = refreshBtn.innerHTML;
+                refreshBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...';
+                refreshBtn.disabled = true;
+                
+                // Reload all data
+                await loadDataFromSheets();
+                
+                // Restore button
+                refreshBtn.innerHTML = originalText;
+                refreshBtn.disabled = false;
+                
+                alert('Đã tải lại dữ liệu thành công từ Google Sheets!');
+                addSyncHistory('Tải lại dữ liệu thành công', 'success');
+                
+            } catch (error) {
+                console.error('Refresh error:', error);
+                alert('Lỗi tải lại dữ liệu: ' + error.message);
+                addSyncHistory('Lỗi tải lại dữ liệu', 'error');
+                
+                // Restore button
+                if (event.target) {
+                    event.target.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Tải lại dữ liệu';
+                    event.target.disabled = false;
+                }
+            }
+        }
+
+        function addSyncHistory(message, type) {
+            const syncHistory = document.getElementById('syncHistory');
+            const newEntry = document.createElement('div');
+            newEntry.className = 'flex items-center justify-between text-sm';
+            
+            const iconClass = type === 'success' ? 'fas fa-check-circle text-green-600' : 
+                             type === 'warning' ? 'fas fa-exclamation-triangle text-yellow-600' : 
+                             'fas fa-times-circle text-red-600';
+            
+            newEntry.innerHTML = `
+                <div class="flex items-center space-x-2">
+                    <i class="${iconClass}"></i>
+                    <span>${message}</span>
+                </div>
+                <span class="text-gray-600">Vừa xong</span>
+            `;
+            
+            // Add to top of history
+            syncHistory.insertBefore(newEntry, syncHistory.firstChild);
+            
+            // Keep only last 5 entries
+            while (syncHistory.children.length > 5) {
+                syncHistory.removeChild(syncHistory.lastChild);
+            }
+        }
+
+        // Load student list
+        function loadStudentList() {
+            const tbody = document.getElementById('studentList');
+            tbody.innerHTML = '';
+            
+            students.forEach((student, index) => {
+                const statusClass = {
+                    'present': 'bg-green-100 text-green-800',
+                    'absent': 'bg-red-100 text-red-800',
+                    'late': 'bg-yellow-100 text-yellow-800'
+                };
+                
+                const statusText = {
+                    'present': 'Có mặt',
+                    'absent': 'Vắng',
+                    'late': 'Trễ'
+                };
+
+                const row = `
+                    <tr class="border-b hover:bg-gray-50">
+                        <td class="p-3">${index + 1}</td>
+                        <td class="p-3 font-medium">${student.name}</td>
+                        <td class="p-3">
+                            <span class="px-2 py-1 rounded text-xs ${statusClass[student.status]}">
+                                ${statusText[student.status]}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <span class="font-medium ${student.discipline >= 8 ? 'text-green-600' : student.discipline >= 6 ? 'text-yellow-600' : 'text-red-600'}">
+                                ${student.discipline}
+                            </span>
+                        </td>
+                        <td class="p-3">
+                            <div class="flex space-x-1">
+                                <button onclick="viewStudent(${student.id})" class="text-blue-600 hover:text-blue-800" title="Xem chi tiết">
+                                    <i class="fas fa-eye"></i>
+                                </button>
+                                <button onclick="messageParent(${student.id})" class="text-green-600 hover:text-green-800" title="Nhắn PHHS">
+                                    <i class="fas fa-comment"></i>
+                                </button>
+                                <button onclick="editDiscipline(${student.id})" class="text-orange-600 hover:text-orange-800" title="Sửa nề nếp">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+                tbody.innerHTML += row;
+            });
+        }
+
+        // Load attendance grid
+        function loadAttendanceGrid() {
+            const grid = document.getElementById('attendanceGrid');
+            grid.innerHTML = '';
+            
+            students.forEach(student => {
+                const card = `
+                    <div class="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onclick="toggleAttendance(${student.id})">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="font-medium text-sm">${student.name}</p>
+                                <p class="text-xs text-gray-600">ID: ${student.id}</p>
+                            </div>
+                            <div class="flex space-x-1">
+                                <button class="attendance-btn ${student.status === 'present' ? 'bg-green-500 text-white' : 'bg-gray-200'} w-8 h-8 rounded text-xs" data-student="${student.id}" data-status="present">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                                <button class="attendance-btn ${student.status === 'late' ? 'bg-yellow-500 text-white' : 'bg-gray-200'} w-8 h-8 rounded text-xs" data-student="${student.id}" data-status="late">
+                                    <i class="fas fa-clock"></i>
+                                </button>
+                                <button class="attendance-btn ${student.status === 'absent' ? 'bg-red-500 text-white' : 'bg-gray-200'} w-8 h-8 rounded text-xs" data-student="${student.id}" data-status="absent">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                grid.innerHTML += card;
+            });
+
+            // Add click handlers for attendance buttons
+            document.querySelectorAll('.attendance-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    const studentId = parseInt(this.dataset.student);
+                    const status = this.dataset.status;
+                    
+                    // Reset all buttons for this student
+                    document.querySelectorAll(`[data-student="${studentId}"]`).forEach(b => {
+                        b.className = b.className.replace(/bg-(green|yellow|red)-500 text-white/, 'bg-gray-200');
+                    });
+                    
+                    // Set active button
+                    const colorMap = { present: 'green', late: 'yellow', absent: 'red' };
+                    this.className = this.className.replace('bg-gray-200', `bg-${colorMap[status]}-500 text-white`);
+                    
+                    // Update student status
+                    const student = students.find(s => s.id === studentId);
+                    if (student) student.status = status;
+                });
+            });
+        }
+
+        // Quick actions
+        function quickAttendance() {
+            document.getElementById('attendanceModal').classList.remove('hidden');
+        }
+
+        function quickDiscipline() {
+            alert('Tính năng ghi nề nếp nhanh sẽ được mở trong modal riêng');
+        }
+
+        function sendMessage() {
+            document.getElementById('messageModal').classList.remove('hidden');
+        }
+
+        function generateReport() {
+            document.getElementById('reportModal').classList.remove('hidden');
+        }
+
+        // Modal functions
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.add('hidden');
+        }
+
+        async function saveAttendance() {
+            if (!isDataLoaded) {
+                alert('Dữ liệu chưa được tải. Vui lòng đợi...');
+                return;
+            }
+            
+            try {
+                // Prepare attendance data for saving
+                const attendanceToSave = students.map(student => ({
+                    stt: student.stt || student.id,
+                    name: student.name,
+                    date: new Date().toDateString(),
+                    status: student.status,
+                    timestamp: new Date().toISOString()
+                }));
+                
+                // Save to Google Apps Script
+                const saveData = {
+                    action: 'saveAttendance',
+                    spreadsheetId: SPREADSHEET_ID,
+                    spreadsheetUrl: SPREADSHEET_URL,
+                    attendanceData: attendanceToSave,
+                    date: new Date().toDateString(),
+                    classInfo: classInfo
+                };
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(saveData)
+                });
+                
+                if (response.ok) {
+                    alert('Đã lưu điểm danh thành công lên Google Sheets!');
+                    closeModal('attendanceModal');
+                    
+                    // Update local attendance data
+                    attendanceToSave.forEach(record => {
+                        if (!attendanceData[record.name]) {
+                            attendanceData[record.name] = {};
+                        }
+                        attendanceData[record.name][record.date] = record.status;
+                    });
+                    
+                    // Refresh displays
+                    updateDashboardStats();
+                    loadStudentList();
+                    
+                    // Add to sync history
+                    addSyncHistory('Lưu điểm danh thành công', 'success');
+                } else {
+                    throw new Error('Lỗi lưu dữ liệu');
+                }
+            } catch (error) {
+                console.error('Save attendance error:', error);
+                alert('Lỗi lưu điểm danh: ' + error.message + '\n\nDữ liệu đã được lưu tạm thời trong ứng dụng.');
+                
+                // Still close modal and update local data
+                closeModal('attendanceModal');
+                updateDashboardStats();
+                loadStudentList();
+                
+                addSyncHistory('Lưu điểm danh - có lỗi', 'warning');
+            }
+        }
+
+        function loadMessageTemplate(template) {
+            const content = document.getElementById('messageContent');
+            if (template && messageTemplates[template]) {
+                content.value = messageTemplates[template];
+            }
+        }
+
+        function sendMessageToParents() {
+            const content = document.getElementById('messageContent').value;
+            if (!content.trim()) {
+                alert('Vui lòng nhập nội dung tin nhắn');
+                return;
+            }
+            
+            // Simulate sending message
+            setTimeout(() => {
+                alert('Đã gửi tin nhắn thành công đến 42 phụ huynh!');
+                closeModal('messageModal');
+                document.getElementById('messageContent').value = '';
+            }, 1000);
+        }
+
+        function generateQuickReport(type) {
+            const reportTypes = {
+                daily: 'Báo cáo ngày',
+                weekly: 'Báo cáo tuần',
+                monthly: 'Báo cáo tháng',
+                semester: 'Báo cáo học kỳ'
+            };
+            
+            const preview = document.getElementById('reportPreview');
+            const content = document.getElementById('reportContent');
+            
+            content.innerHTML = `
+                <h5 class="font-semibold mb-3">${reportTypes[type]} - Lớp 10A1</h5>
+                <div class="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                        <p class="text-sm text-gray-600">Sĩ số lớp</p>
+                        <p class="text-lg font-semibold">42 học sinh</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Tỷ lệ chuyên cần</p>
+                        <p class="text-lg font-semibold text-green-600">92.8%</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">Điểm nề nếp TB</p>
+                        <p class="text-lg font-semibold text-blue-600">8.5/10</p>
+                    </div>
+                    <div>
+                        <p class="text-sm text-gray-600">HS cần hỗ trợ</p>
+                        <p class="text-lg font-semibold text-red-600">3 học sinh</p>
+                    </div>
+                </div>
+                <div class="text-center">
+                    <button onclick="exportData('pdf')" class="bg-red-600 text-white px-4 py-2 rounded-lg mr-2">
+                        <i class="fas fa-download mr-2"></i>Tải PDF
+                    </button>
+                    <button onclick="exportData('excel')" class="bg-green-600 text-white px-4 py-2 rounded-lg">
+                        <i class="fas fa-download mr-2"></i>Tải Excel
+                    </button>
+                </div>
+            `;
+            
+            preview.classList.remove('hidden');
+        }
+
+        function exportData(format) {
+            const formats = {
+                pdf: 'PDF',
+                excel: 'Excel',
+                sheets: 'Google Sheets'
+            };
+            
+            alert(`Đang xuất dữ liệu định dạng ${formats[format]}...`);
+            
+            // Simulate export process
+            setTimeout(() => {
+                alert(`Đã xuất thành công! File ${formats[format]} đã được tải về.`);
+            }, 2000);
+        }
+
+        // Student actions
+        function viewStudent(id) {
+            const student = students.find(s => s.id === id);
+            alert(`Xem chi tiết học sinh: ${student.name}\n\nTính năng này sẽ mở trang hồ sơ chi tiết của học sinh.`);
+        }
+
+        function messageParent(id) {
+            const student = students.find(s => s.id === id);
+            alert(`Nhắn tin cho phụ huynh của: ${student.name}\n\nTính năng này sẽ mở form gửi tin nhắn riêng.`);
+        }
+
+        async function editDiscipline(id) {
+            const student = students.find(s => s.id === id);
+            if (!student) return;
+            
+            const newScore = prompt(`Nhập điểm nề nếp mới cho ${student.name}:`, student.discipline);
+            if (newScore === null || isNaN(newScore)) return;
+            
+            const score = parseFloat(newScore);
+            if (score < 0 || score > 10) {
+                alert('Điểm nề nếp phải từ 0 đến 10');
+                return;
+            }
+            
+            try {
+                // Update local data first
+                student.discipline = score;
+                
+                // Save to Google Sheets
+                const disciplineData = {
+                    action: 'saveDiscipline',
+                    spreadsheetId: SPREADSHEET_ID,
+                    spreadsheetUrl: SPREADSHEET_URL,
+                    studentData: {
+                        stt: student.stt || student.id,
+                        name: student.name,
+                        score: score,
+                        date: new Date().toDateString(),
+                        notes: `Cập nhật bởi ${classInfo.teacher || 'GVCN'}`
+                    },
+                    classInfo: classInfo
+                };
+                
+                const response = await fetch(GOOGLE_SCRIPT_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(disciplineData)
+                });
+                
+                if (response.ok) {
+                    alert('Đã cập nhật điểm nề nếp thành công!');
+                    
+                    // Update local discipline data
+                    disciplineData[student.name] = {
+                        score: score,
+                        notes: disciplineData.studentData.notes
+                    };
+                    
+                    // Refresh displays
+                    updateDashboardStats();
+                    loadStudentList();
+                    
+                    addSyncHistory(`Cập nhật nề nếp ${student.name}`, 'success');
+                } else {
+                    throw new Error('Lỗi lưu dữ liệu');
+                }
+            } catch (error) {
+                console.error('Save discipline error:', error);
+                alert('Lỗi cập nhật điểm nề nếp: ' + error.message + '\n\nDữ liệu đã được lưu tạm thời trong ứng dụng.');
+                
+                // Still update local display
+                updateDashboardStats();
+                loadStudentList();
+                
+                addSyncHistory(`Cập nhật nề nếp ${student.name} - có lỗi`, 'warning');
+            }
+        }
+
+        // Add some interactive animations
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animate progress bars
+            setTimeout(() => {
+                document.querySelectorAll('.progress-bar').forEach(bar => {
+                    const width = bar.style.width;
+                    bar.style.width = '0%';
+                    setTimeout(() => {
+                        bar.style.width = width;
+                    }, 100);
+                });
+            }, 500);
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'96bcf3d89781472e',t:'MTc1NDYzNDQ5NS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
